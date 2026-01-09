@@ -1,4 +1,12 @@
+"use client";
+
+import * as React from "react";
+import PdfDropzone from "./components/PdfDropzone";
+
 export default function Home() {
+  const [file, setFile] = React.useState<File | null>(null);
+  const [productName, setProductName] = React.useState("");
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-zinc-900">
       {/* Header */}
@@ -37,33 +45,20 @@ export default function Home() {
                       Start with text-based PDFs. Scanned PDFs (images) will be supported later.
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-500">
-                    Max 20MB (for MVP)
-                  </div>
+                  <div className="text-xs text-zinc-500">Max 20MB (for MVP)</div>
                 </div>
 
-                {/* Upload placeholder */}
-                <div className="mt-6 rounded-2xl border-2 border-dashed border-zinc-300 p-10 text-center">
-                  <p className="text-sm text-zinc-600">
-                    Drag and drop your PDF here, or{" "}
-                    <span className="text-zinc-900 underline underline-offset-4">
-                      browse
-                    </span>
-                  </p>
-                  <p className="mt-2 text-xs text-zinc-500">PDF only</p>
-
-                  <button
-                    type="button"
-                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-                  >
-                    Select PDF
-                  </button>
+                {/* Real upload */}
+                <div className="mt-6">
+                  <PdfDropzone file={file} onFileSelected={setFile} />
                 </div>
 
-                {/* Product name placeholder */}
+                {/* Product name */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium">Product name</label>
                   <input
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/20"
                     placeholder="e.g., AI Prompt Playbook for Coaches"
                   />
@@ -72,9 +67,9 @@ export default function Home() {
                 <button
                   type="button"
                   className="mt-6 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
-                  disabled
+                  disabled={!file || productName.trim().length === 0}
                 >
-                  Generate Gumroad Listing (disabled for now)
+                  Generate Gumroad Listing
                 </button>
 
                 <p className="mt-3 text-xs text-zinc-500">
