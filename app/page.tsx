@@ -7,12 +7,50 @@ export default function Home() {
   const [file, setFile] = React.useState<File | null>(null);
   const [productName, setProductName] = React.useState("");
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [apiResponse, setApiResponse] = React.useState<any>(null);
+  const [apiError, setApiError] = React.useState<string | null>(null);
+
+  async function handleGenerate() {
+    if (!file || productName.trim().length === 0) return;
+
+    setIsSubmitting(true);
+    setApiError(null);
+    setApiResponse(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("productName", productName.trim());
+      fd.append("file", file);
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        body: fd,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiError(data?.error || "Request failed.");
+        return;
+      }
+
+      setApiResponse(data);
+    } catch (e) {
+      setApiError(String(e));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-zinc-900">
       {/* Header */}
       <header className="border-b border-zinc-200">
         <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-          <div className="font-semibold tracking-tight">Gumroad Listing Generator</div>
+          <div className="font-semibold tracking-tight">
+            Gumroad Listing Generator
+          </div>
           <nav className="text-sm text-zinc-600">
             <a className="hover:text-zinc-900" href="#how-it-works">
               How it works
@@ -29,8 +67,9 @@ export default function Home() {
               Generate a high-converting Gumroad page from your PDF
             </h1>
             <p className="mt-3 text-zinc-600">
-              Upload a PDF and enter a product name. Get a ready-to-paste title, short description,
-              long description, bullets, FAQ, and pricing guidance.
+              Upload a PDF and enter a product name. Get a ready-to-paste title,
+              short description, long description, bullets, FAQ, and pricing
+              guidance.
             </p>
           </div>
 
@@ -40,22 +79,29 @@ export default function Home() {
               <div className="p-6 sm:p-8">
                 <div className="flex items-start justify-between gap-6 flex-col sm:flex-row">
                   <div>
-                    <h2 className="text-lg font-semibold">Upload your product PDF</h2>
+                    <h2 className="text-lg font-semibold">
+                      Upload your product PDF
+                    </h2>
                     <p className="mt-1 text-sm text-zinc-600">
-                      Start with text-based PDFs. Scanned PDFs (images) will be supported later.
+                      Start with text-based PDFs. Scanned PDFs (images) will be
+                      supported later.
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-500">Max 20MB (for MVP)</div>
+                  <div className="text-xs text-zinc-500">
+                    Max 20MB (for MVP)
+                  </div>
                 </div>
 
-                {/* Real upload */}
+                {/* Upload */}
                 <div className="mt-6">
                   <PdfDropzone file={file} onFileSelected={setFile} />
                 </div>
 
                 {/* Product name */}
                 <div className="mt-6">
-                  <label className="block text-sm font-medium">Product name</label>
+                  <label className="block text-sm font-medium">
+                    Product name
+                  </label>
                   <input
                     value={productName}
                     onChange={(e) => setProductName(e.target.value)}
@@ -64,17 +110,40 @@ export default function Home() {
                   />
                 </div>
 
+                {/* Action */}
                 <button
                   type="button"
+                  onClick={handleGenerate}
                   className="mt-6 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
-                  disabled={!file || productName.trim().length === 0}
+                  disabled={
+                    !file ||
+                    productName.trim().length === 0 ||
+                    isSubmitting
+                  }
                 >
-                  Generate Gumroad Listing
+                  {isSubmitting
+                    ? "Generating..."
+                    : "Generate Gumroad Listing"}
                 </button>
 
-                <p className="mt-3 text-xs text-zinc-500">
-                  Next: we’ll wire up upload + extraction + generation.
-                </p>
+                {/* Errors */}
+                {apiError ? (
+                  <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    {apiError}
+                  </div>
+                ) : null}
+
+                {/* Debug response */}
+                {apiResponse ? (
+                  <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="text-sm font-medium text-zinc-900">
+                      API response (debug)
+                    </div>
+                    <pre className="mt-2 overflow-auto text-xs text-zinc-700">
+                      {JSON.stringify(apiResponse, null, 2)}
+                    </pre>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>
@@ -85,15 +154,21 @@ export default function Home() {
             <ol className="mt-3 grid gap-3 sm:grid-cols-3 text-sm text-zinc-600">
               <li className="rounded-2xl border border-zinc-200 p-4">
                 <div className="font-medium text-zinc-900">1) Upload</div>
-                <div className="mt-1">Add your PDF and product name.</div>
+                <div className="mt-1">
+                  Add your PDF and product name.
+                </div>
               </li>
               <li className="rounded-2xl border border-zinc-200 p-4">
                 <div className="font-medium text-zinc-900">2) Extract</div>
-                <div className="mt-1">We read the PDF and detect the product type.</div>
+                <div className="mt-1">
+                  We read the PDF and detect the product type.
+                </div>
               </li>
               <li className="rounded-2xl border border-zinc-200 p-4">
                 <div className="font-medium text-zinc-900">3) Generate</div>
-                <div className="mt-1">You get structured Gumroad-ready copy.</div>
+                <div className="mt-1">
+                  You get structured Gumroad-ready copy.
+                </div>
               </li>
             </ol>
           </section>
